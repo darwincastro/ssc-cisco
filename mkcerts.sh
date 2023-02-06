@@ -22,7 +22,7 @@ C = Country
 ST = State
 L = City
 O = Company_Name
-OU = IT
+OU = CA
 CN = example.com
 EOF
 ) > ca.cnf
@@ -38,11 +38,11 @@ prompt = no
 req_extensions = v3_req
 
 [req_distinguished_name]
-C = US
-ST = California
-L = San Jose
-O = Cisco
-OU = MDTG
+C = Country
+ST = State
+L = City
+O = Company_Name
+OU = Device
 CN = ${1}
 
 [v3_req]
@@ -57,35 +57,18 @@ openssl genrsa -out ${1}.key > /dev/null 2>&1
 openssl req -new -key ${1}.key -out ${1}.csr -config ${1}.cnf
 openssl x509 -req -in ${1}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateserial -days 365 -out ${1}.crt > /dev/null 2>&1
 
-(
-cat <<EOF
-[req]
-distinguished_name = req_distinguished_name
-prompt = no
-
-[req_distinguished_name]
-C = US
-ST = California
-L = San Jose
-O = Cisco
-OU = MDTG
-CN = ${2}
-EOF
-) > ${2}.cnf
-
-
-cleanUp () {
-    rm ca.cnf \
-        $1.cnf \
-        $2.cnf \
-        $1.csr \
-        $1.crt \
-        $1.key \
-        $1-ca.key \
-        $2.csr \
-        $2-ca.crt \
-        $2-ca.key
-}
+#cleanUp () {
+#   rm ca.cnf \
+#        $1.cnf \
+#        $2.cnf \
+#        $1.csr \
+#        $1.crt \
+#        $1.key \
+#       $1-ca.key \
+#        $2.csr \
+#       $2-ca.crt \
+#        $2-ca.key
+#}
 
 openssl genrsa -des3 -out ${2}.key -passout ${PASS}:admin > /dev/null 2>&1
 openssl req -new -key ${2}.key -out ${2}.csr -config ${2}.cnf -passin ${PASS}:admin
