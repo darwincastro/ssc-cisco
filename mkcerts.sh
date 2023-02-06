@@ -18,19 +18,17 @@ distinguished_name = req_distinguished_name
 prompt = no
 
 [req_distinguished_name]
-C = US
-ST = California
-L = San Jose
-O = Cisco
-OU = MDT
-CN = cisco.com
+C = Country
+ST = State
+L = City
+O = Company_Name
+OU = IT
+CN = example.com
 EOF
 ) > ca.cnf
 
-openssl genrsa -out ${1}-ca.key > /dev/null 2>&1
-openssl req -x509 -new -nodes -key ${1}-ca.key -days 365 -out ${1}-ca.crt -config ca.cnf > /dev/null 2>&1
-openssl genrsa -out ${2}-ca.key > /dev/null 2>&1
-openssl req -x509 -new -nodes -key ${2}-ca.key -days 365 -out ${2}-ca.crt -config ca.cnf > /dev/null 2>&1
+openssl genrsa -aes256 -out ${1}-ca.key > /dev/null 2>&1
+openssl req -x509 -sha256 -new -nodes -key ${1}-ca.key -days 365 -out ${1}-ca.crt -config ca.cnf > /dev/null 2>&1
 
 (
 cat <<EOF
