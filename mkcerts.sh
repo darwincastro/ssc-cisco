@@ -7,7 +7,7 @@ GREEN="\033[0;32m"
 RESET="\033[0m"
 
 
-[ $# != 2 ] && echo "Usage: $0 <collector FQDN> <device FQDN>" && exit 1
+[ $# != 1 ] && echo "Usage: $0 <device FQDN>" && exit 1
 
 [ ! -x /usr/bin/openssl ] && echo "${RED}Openssl not found.${RESET}" && exit 1
 
