@@ -43,19 +43,19 @@ ST = State
 L = City
 O = Company_Name
 OU = Device
-CN = ${1}
+CN = ${2}
 
 [v3_req]
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = ${1}
+DNS.1 = ${2}
 EOF
-) > ${1}.cnf
+) > ${2}.cnf
 
-openssl genrsa -out ${1}.key > /dev/null 2>&1
-openssl req -new -key ${1}.key -out ${1}.csr -config ${1}.cnf
-openssl x509 -req -in ${1}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateserial -days 365 -out ${1}.crt > /dev/null 2>&1
+openssl req genrsa -des3 -out ${2}.key -passout ${PASS}:cisco > /dev/null 2>&1
+openssl req -new -sha256 -key ${2}.key -out ${2}.csr -config ${2}.cnf -passin ${PASS}:cisco
+openssl x509 -req -sha256 -in ${2}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateserial -days 365 -out ${2}-.crt > /dev/null 2>&1
 
 #cleanUp () {
 #   rm ca.cnf \
@@ -70,16 +70,13 @@ openssl x509 -req -in ${1}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateseria
 #        $2-ca.key
 #}
 
-openssl genrsa -des3 -out ${2}.key -passout ${PASS}:admin > /dev/null 2>&1
-openssl req -new -key ${2}.key -out ${2}.csr -config ${2}.cnf -passin ${PASS}:admin
-openssl x509 -req -in ${2}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateserial -days 365 -out ${2}-${1}-ca.crt > /dev/null 2>&1
 
-cleanUp ${1} ${2}
+#cleanUp ${1} ${2}
 
 
 echo "\n${GREEN}Configure the trustpoint using the following:
 
-crypto pki import <trustpoint name 1> pem terminal password admin
+crypto pki import <trustpoint name 1> pem terminal password cisco
  <paste contents of ${1}-ca.crt>
  <paste contents of ${2}.key>
- <paste contents of ${2}-${1}-ca.crt${RESET}\n"
+ <paste contents of ${2}-.crt${RESET}\n"
