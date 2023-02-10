@@ -1,82 +1,53 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-export $(grep -v '^#' .env | xargs)
+export "$(grep -v '^#' .env | xargs)"
 
 RED="\033[0;31m"
 GREEN="\033[0;32m"
+YELLOW='\033[1;33m'
+CYAN="\033[1;36m"
 RESET="\033[0m"
 
+[ ! -x /usr/bin/openssl ] && echo -e "${RED}Openssl not found.${RESET}" && exit 1
 
-[ $# != 1 ] && echo "Usage: $0 <device FQDN>" && exit 1
+echo -e "${CYAN}Generating CA key${RESET}"
+openssl genrsa -out ca.key && echo -e "\n${YELLOW}Please add the CA information${RESET}"
 
-[ ! -x /usr/bin/openssl ] && echo "${RED}Openssl not found.${RESET}" && exit 1
+openssl req -x509 -sha256 -new -nodes -key ca.key -days 365 -out ca.pem -config .ca.cnf \
+  && echo "${CYAN}Generating Device key${RESET}"
 
-(
-cat <<EOF
-[req]
-distinguished_name = req_distinguished_name
-prompt = no
+openssl genrsa -des3 -out device.key -passout ${PASS}:cisco 4096 \
+  && echo -e "\n${YELLOW}Please add the DEVICE information${RESET}"
 
-[req_distinguished_name]
-C = Country
-ST = State
-L = City
-O = Company_Name
-OU = CA
-CN = example.com
-EOF
-) > ca.cnf
+openssl req -new -sha256 -key device.key -out device.csr -config .device.cnf -passin \
+  ${PASS}:cisco && echo -e "${CYAN}Generating Certificate${RESET}"
 
-openssl genrsa -aes256 -out ${1}-ca.key > /dev/null 2>&1
-openssl req -x509 -sha256 -new -nodes -key ${1}-ca.key -days 365 -out ${1}-ca.crt -config ca.cnf > /dev/null 2>&1
+echo -e "\n${YELLOW}Please copy the above device FQDN input${RESET}" && read -p 'paste here: ' fqdn
 
-(
-cat <<EOF
-[req]
-distinguished_name = req_distinguished_name
-prompt = no
-req_extensions = v3_req
+echo -e "\n${YELLOW}Please enter your DEVICE IP${RESET}" && read -p 'IP: ' addr
 
-[req_distinguished_name]
-C = Country
-ST = State
-L = City
-O = Company_Name
-OU = Device
-CN = ${2}
+if [[ $addr =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+        echo $addr > /dev/null 2>&1
+else
+        echo -e "${RED}Wrong Input.${RESET}"
+        exit 1
+fi
 
-[v3_req]
-subjectAltName = @alt_names
+output="subjectAltName=DNS:${fqdn},IP:${addr}"
 
-[alt_names]
-DNS.1 = ${2}
-EOF
-) > ${2}.cnf
+echo "$output" > extfile.cnf
 
-openssl req genrsa -des3 -out ${2}.key -passout ${PASS}:cisco > /dev/null 2>&1
-openssl req -new -sha256 -key ${2}.key -out ${2}.csr -config ${2}.cnf -passin ${PASS}:cisco
-openssl x509 -req -sha256 -in ${2}.csr -CA ${1}-ca.crt -CAkey ${1}-ca.key -CAcreateserial -days 365 -out ${2}-.crt > /dev/null 2>&1
+openssl x509 -req -sha256 -in device.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+ -days 365 -extfile extfile.cnf -out device.pem > /dev/null 2>&1
 
-#cleanUp () {
-#   rm ca.cnf \
-#        $1.cnf \
-#        $2.cnf \
-#        $1.csr \
-#        $1.crt \
-#        $1.key \
-#       $1-ca.key \
-#        $2.csr \
-#       $2-ca.crt \
-#        $2-ca.key
-#}
+rm extfile.cnf \
+  device.csr \
+  ca.srl \
 
 
-#cleanUp ${1} ${2}
+echo -e "\n${GREEN}Configure the trustpoint in your network device using the following:
 
-
-echo "\n${GREEN}Configure the trustpoint using the following:
-
-crypto pki import <trustpoint name 1> pem terminal password cisco
- <paste contents of ${1}-ca.crt>
- <paste contents of ${2}.key>
- <paste contents of ${2}-.crt${RESET}\n"
+crypto pki import <trustpoint name> pem terminal password cisco
+ <paste contents of ca.pem>
+ <paste contents of device.key>
+ <paste contents of device.pem>${RESET}\n"

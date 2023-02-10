@@ -7,5 +7,6 @@ C               = Country Name (2 letter code)
 ST              = State or Province Name (full name)
 L               = Locality Name (eg, city)
 O               = Organization Name (eg, company)
-OU		= Organizational Unit (eg, section)
+OU              = Organizational Unit (eg, section)
 CN              = Common Name (e.g. server FQDN or YOUR name)
+
