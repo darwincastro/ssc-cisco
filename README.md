@@ -51,7 +51,6 @@ Add any information that you likes, but make sure the device hostname includes t
 
 ---
 Note: The script supports one hostname, and one IP address, if you are planning to use multiple IPs & names feel free to modify the code per your convenience.
----
 
 **After adding the IP address you will see the following output**:
 
