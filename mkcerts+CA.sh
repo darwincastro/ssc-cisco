@@ -14,7 +14,7 @@ echo -e "${CYAN}Generating CA key${RESET}"
 openssl genrsa -out ca.key && echo -e "\n${YELLOW}Please add the CA information${RESET}"
 
 openssl req -x509 -sha256 -new -nodes -key ca.key -days 365 -out ca.pem -config .ca.cnf \
-  && echo "${CYAN}Generating Device key${RESET}"
+  && echo -e "${CYAN}Generating Device key${RESET}"
 
 openssl genrsa -des3 -out device.key -passout ${PASS}:cisco 4096 \
   && echo -e "\n${YELLOW}Please add the DEVICE information${RESET}"
