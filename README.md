@@ -1,5 +1,4 @@
 # Cisco Self-Signed Certificate Generator
- 🚧 Work In-Progress 🚧
 
 Script used to create a CA and self-signed certificates for Cisco devices, it could be used for other network devices as well.
 
